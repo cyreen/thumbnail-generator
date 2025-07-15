@@ -16,10 +16,12 @@ def lambda_handler(event, context):
     bucket_name = event['Records'][0]['s3']['bucket']['name']
     object_key = event['Records'][0]['s3']['object']['key']
 
-    # If 'my-pictures' is NOT in the key, skip this object
+    # If 'pictures' is NOT in the key, skip this object
     if 'pictures' not in object_key:
         print(f"Skipping: {object_key} — doesn't contain 'pictures'")
         return {'statusCode': 200, 'body': 'Skipped: key does not contain pictures'}
+
+    print(f"Request received for {bucket_name} {object_key}")
 
     # Skip thumbnails folder to avoid recursion
     if object_key.startswith('thumbnails/'):
@@ -51,7 +53,7 @@ def generate_image_thumbnail(input_path, bucket_name, object_key, tmpdirname):
 
         thumbnail_key = f"thumbnails/{os.path.basename(object_key)}"
         s3_client.upload_file(thumbnail_path, bucket_name, thumbnail_key)
-        print(f"Image thumbnail uploaded to {thumbnail_key}")
+        print(f"Image thumbnail uploaded to {bucket_name} {thumbnail_key}")
 
 
 def generate_video_thumbnail(input_path, bucket_name, object_key, tmpdirname):
@@ -65,7 +67,7 @@ def generate_video_thumbnail(input_path, bucket_name, object_key, tmpdirname):
         '-i', input_path,
         '-ss', '00:00:01.000',
         '-vframes', '1',
-        '-vf', 'scale=720:-1',  # Scale width to 720px, maintain aspect ratio
+        '-vf', 'scale=720:-1',  # Scale width to 128px, maintain aspect ratio
         thumbnail_path
     ]
 
@@ -78,4 +80,4 @@ def generate_video_thumbnail(input_path, bucket_name, object_key, tmpdirname):
     # Upload the thumbnail
     thumbnail_key = f"thumbnails/{os.path.basename(object_key)}.png"
     s3_client.upload_file(thumbnail_path, bucket_name, thumbnail_key)
-    print(f"Video thumbnail uploaded to {thumbnail_key}")
+    print(f"Video thumbnail uploaded to {bucket_name} {thumbnail_key}")
