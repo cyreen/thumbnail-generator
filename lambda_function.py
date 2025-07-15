@@ -16,6 +16,11 @@ def lambda_handler(event, context):
     bucket_name = event['Records'][0]['s3']['bucket']['name']
     object_key = event['Records'][0]['s3']['object']['key']
 
+    # If 'my-pictures' is NOT in the key, skip this object
+    if 'pictures' not in object_key:
+        print(f"Skipping: {object_key} — doesn't contain 'pictures'")
+        return {'statusCode': 200, 'body': 'Skipped: key does not contain pictures'}
+
     # Skip thumbnails folder to avoid recursion
     if object_key.startswith('thumbnails/'):
         print(f"Skipping thumbnail generation for {object_key}")
